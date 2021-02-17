@@ -1,0 +1,37 @@
+create or replace PACKAGE PG_MT_DIAGRAM AS 
+    -- 表單資料
+    TYPE TO_FORM_DATA IS RECORD(
+	    RUNNINGACTIVITY_ID  VARCHAR2(20),
+        PACE_PER_KM  NUMBER,
+	    DISTANCE  NUMBER,
+	    CALORIES  NUMBER,
+	    HEARTRATE  NUMBER,
+	    ELEVATIONVARIATION  NUMBER,
+	    CRE_DATE_TIME  DATE,
+	    UPD_DATE_TIME  DATE,
+	    CREATOR  VARCHAR2(20),
+	    UPDATER  VARCHAR2(36),
+        IS_VALID VARCHAR2(20),
+        GOAL_ID VARCHAR2(20),
+        UUID VARCHAR2(20)
+    );
+    -- 表單資料清單
+    TYPE TT_FORM_DATA_LIST IS TABLE OF TO_FORM_DATA;
+    -- 查詢條件 ----------------------------------------------------------------------------------------------------
+    PROCEDURE SP_QUERY_FORM_DATA_LIST(
+        --查詢當前目標
+        I_IS_VALID VARCHAR2,  
+        --使用者ID
+        I_UUID VARCHAR2  , 
+        --起始時間
+        I_START_DATE VARCHAR2,
+        --結束時間
+        I_END_DATE VARCHAR2,
+        --目標 ID
+        I_GOAL_ID VARCHAR2,                                                                             
+        -- 輸出結果 ----------------------------------------------------------------------------------------------------                                                                              
+        O_DATA OUT SYS_REFCURSOR,
+        O_DATA1 OUT SYS_REFCURSOR,
+        O_DATA2 OUT SYS_REFCURSOR
+    );
+END PG_MT_DIAGRAM;

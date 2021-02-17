@@ -1,0 +1,77 @@
+create or replace PACKAGE BODY PG_MT_DIAGRAM AS
+
+  PROCEDURE SP_QUERY_FORM_DATA_LIST(
+        --查詢當前目標
+        I_IS_VALID VARCHAR2,  
+        --使用者ID
+        I_UUID VARCHAR2  , 
+        --起始時間
+        I_START_DATE VARCHAR2,
+        --結束時間
+        I_END_DATE VARCHAR2,
+        --目標 ID
+        I_GOAL_ID VARCHAR2,                                                                              
+        -- 輸出結果 ----------------------------------------------------------------------------------------------------                                                                              
+        O_DATA OUT SYS_REFCURSOR,
+        O_DATA1 OUT SYS_REFCURSOR,
+        O_DATA2 OUT SYS_REFCURSOR
+    ) AS
+  BEGIN
+    -- TODO: 必須實行 PROCEDURE PG_WEEK_QRY_MT_RA_CALORIES.SP_QUERY_FORM_DATA_LIST
+    OPEN O_DATA FOR
+        SELECT
+            COUNT(CASE WHEN A.DISTANCE >42 THEN 1 ELSE NULL END) upper42,
+            COUNT(CASE WHEN A.DISTANCE <=42 AND A.DISTANCE>21 THEN 1 ELSE NULL END) between21And42,
+            COUNT(CASE WHEN A.DISTANCE <=21 AND A.DISTANCE>15 THEN 1 ELSE NULL END) between15And21,
+            COUNT(CASE WHEN A.DISTANCE <=15 AND A.DISTANCE>10 THEN 1 ELSE NULL END) between10And15,
+            COUNT(CASE WHEN A.DISTANCE <=10 AND A.DISTANCE>4 THEN 1 ELSE NULL END) between4And10,
+            COUNT(CASE WHEN A.DISTANCE <=4 THEN 1 ELSE NULL END) lower4
+        FROM TB_RUNNINGACTIVITY_MT_DIRECTORY A WHERE
+            '2021-02-08' <= to_char(A.UPD_DATE_TIME,'yyyy-mm-dd') 
+        AND
+            '2021-02-10' >= to_char(A.UPD_DATE_TIME,'yyyy-mm-dd')
+        AND 
+            A.UUID = '128221181500194816'
+        AND 
+            A.IS_VALID = '1';
+    -- TODO -----------------------------------------------------------------------------------------
+    OPEN O_DATA1 FOR
+        SELECT
+            A.PACE_PER_KM
+        FROM TB_RUNNINGACTIVITY_MT_DIRECTORY A WHERE
+            '2021-02-08' <= to_char(A.UPD_DATE_TIME,'yyyy-mm-dd') 
+        AND
+            '2021-02-10' >= to_char(A.UPD_DATE_TIME,'yyyy-mm-dd')
+        AND 
+            A.UUID = '128221181500194816'
+        AND 
+            A.IS_VALID = '1';
+    -- TODO -----------------------------------------------------------------------------------------
+    OPEN O_DATA2 FOR
+        SELECT
+            A.PACE_PER_KM
+        FROM TB_RUNNINGACTIVITY_MT_DIRECTORY A WHERE
+            '2021-02-08' <= to_char(A.UPD_DATE_TIME,'yyyy-mm-dd') 
+        AND
+            '2021-02-10' >= to_char(A.UPD_DATE_TIME,'yyyy-mm-dd')
+        AND 
+            A.UUID = '128221181500194816'
+        AND 
+            A.IS_VALID = '1';
+    -- TODO -----------------------------------------------------------------------------------------                                                                                          
+       OPEN O_DATA2 FOR
+        SELECT
+            A.CALORIES
+        FROM TB_RUNNINGACTIVITY_MT_DIRECTORY A WHERE
+            '2021-02-08' <= to_char(A.UPD_DATE_TIME,'yyyy-mm-dd') 
+        AND
+            '2021-02-10' >= to_char(A.UPD_DATE_TIME,'yyyy-mm-dd')
+        AND 
+            A.UUID = '128221181500194816'
+        AND 
+            A.IS_VALID = '1'
+    ;
+  END SP_QUERY_FORM_DATA_LIST;
+
+
+END PG_MT_DIAGRAM;
