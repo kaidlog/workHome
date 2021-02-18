@@ -1,0 +1,33 @@
+create or replace PACKAGE PG_MT_JUDGE_GOAL AS 
+
+    -- 表單資料
+    TYPE TO_FORM_DATA IS RECORD(
+        NEW_DATE NUMBER,
+        AVG_DISTANCE VARCHAR2(5),
+        FAST_PACE_PER_KM VARCHAR2(5),
+        AVG_HEARTRATE VARCHAR2(5),
+        AVG_ELE_VAR VARCHAR2(5),
+        TIME_TICKS VARCHAR2(10)
+    );
+    -- 表單資料清單
+    TYPE TT_FORM_DATA_LIST IS TABLE OF TO_FORM_DATA;
+
+    -- 查詢條件 ----------------------------------------------------------------------------------------------------
+    PROCEDURE SP_QUERY_FORM_DATA_LIST(
+        --查詢當前目標
+        I_IS_VALID VARCHAR2,  
+        --使用者ID
+        I_UUID VARCHAR2  , 
+        --目標 ID
+        I_GOAL_ID VARCHAR2,
+        --週期
+        I_SET_PERIOD VARCHAR2,
+        --難度
+        I_DIFFICULTY VARCHAR2,
+        --理想距離
+        I_IDEAL_DISTANCE VARCHAR2,
+        -- 輸出結果 ----------------------------------------------------------------------------------------------------                                                                              
+        O_DATA OUT NUMBER
+    );
+
+END PG_MT_JUDGE_GOAL;

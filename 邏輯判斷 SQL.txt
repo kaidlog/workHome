@@ -1,0 +1,100 @@
+create or replace PACKAGE BODY PG_MT_JUDGE_GOAL AS
+    -----------------------------------------------------------------------    這隻 procedure 的目標是要判斷當前這個目標是否 fail
+    PROCEDURE SP_QUERY_FORM_DATA_LIST(
+            --查詢當前目標
+            I_IS_VALID VARCHAR2,
+            --使用者ID
+            I_UUID VARCHAR2 , 
+            --目標 ID
+            I_GOAL_ID VARCHAR2,    
+            --週期
+            I_SET_PERIOD VARCHAR2,
+            --難度
+            I_DIFFICULTY VARCHAR2,
+            --理想距離
+            I_IDEAL_DISTANCE VARCHAR2,
+            I_IDEAL_PACE_PER_KM VARCHAR2
+            -- 輸出結果 ----------------------------------------------------------------------------------------------------                                                                              
+            O_DATA OUT NUMBER
+        ) AS TEMP_DATA_LIST TO_FORM_DATA;
+      BEGIN
+       SELECT
+            ----------------  
+            COUNT(DISTINCT TO_CHAR(A.CRE_DATE_TIME, 'yyyy-MM-dd')) NEW_DATE,
+            ROUND(AVG(A.DISTANCE)) AVG_DISTANCE,
+            ROUND(MIN(A.PACE_PER_KM)) FAST_PACE_PER_KM,
+            ROUND(AVG(A.HEARTRATE)) AVG_HEARTRATE,
+            ROUND(AVG(A.ELEVATIONVARIATION)) AVG_ELE_VAR,
+            ROUND(TO_NUMBER(SYSDATE - TO_DATE('2021-02-01','yyyy-MM-dd'))) TIME_TICKS
+        INTO TEMP_DATA_LIST
+        FROM TB_RUNNINGACTIVITY_MT_DIRECTORY A
+        WHERE
+            A.UUID = '128221181500194816'
+        AND
+            A.IS_VALID = '1';
+       ----------------------------------------------
+--       困難等級的判斷
+--       距離創建目標已經過的天數 如果大於 目標週期的天數
+         IF I_DIFFICULTY = '0'
+            THEN IF TEMP_DATA_LIST.TIME_TICKS <> I_SET_PERIOD * 7
+                AND
+                -- 第一周平均跑步距離要大於 理想距離 * 0.8 ^ (理想週期 - 第一周 +1)
+                    TEMP_DATA_LIST.AVG_DISTANCE >= I_IDEAL_DISTANCE * POWER(0.8, (I_SET_PERIOD - ROUND(TIME_TICKS/7)+1))
+                AND
+                -- 第一周平均跑步分速要快於 理想分速 * 1.2 ^ (理想週期 - 第一周 +1)
+                    TEMP_DATA_LIST.FAST_PACE_PER_KM <= I_IDEAL_PACE_PER_KM * POWER(1.2, (I_SET_PERIOD - ROUND(TIME_TICKS/7)+1))
+                AND
+                -- 實際紀錄的天數等於週期設定的天數
+                    I_SET_PERIOD * 7 <= NEW_DATE
+--            並執行一個 UPDATE 將此目標的 IS_VALID 改成 2
+                THEN IF TEMP_DATA_LIST.TIME_TICKS >= I_SET_PERIOD * 7
+                    THEN O_DATA := 2 -- 回傳給前端，告訴 USER 這個目標確實已經完成了
+                END IF;
+                ELSE O_DATA := 1 -- 回傳給前端，告訴 USER 這個目標還在執行當中
+            END IF;
+            ELSE O_DATA:= 0; -- 回傳給前端，告訴 USER 這個目標 FAIL 了
+        END IF;
+        -----------------------------------------------------
+--       中等級的判斷
+--       距離創建目標已經過的天數 如果大於 目標週期的天數
+         IF I_DIFFICULTY = '1'
+            THEN IF TEMP_DATA_LIST.TIME_TICKS <> I_SET_PERIOD * 7
+                AND
+                -- 第一周平均跑步距離要大於 理想距離 * 0.8 ^ (理想週期 - 第一周 +1)
+                    TEMP_DATA_LIST.AVG_DISTANCE >= I_IDEAL_DISTANCE * POWER(0.8, (I_SET_PERIOD - ROUND(TIME_TICKS/7)+1))
+                AND
+                -- 第一周平均跑步分速要快於 理想分速 * 1.2 ^ (理想週期 - 第一周 +1)
+                    TEMP_DATA_LIST.FAST_PACE_PER_KM <= I_IDEAL_PACE_PER_KM * POWER(1.2, (I_SET_PERIOD - ROUND(TIME_TICKS/7)+1))
+                AND
+                -- 實際紀錄的天數等於週期設定的天數
+                    I_SET_PERIOD * 7 * 0.8 <= NEW_DATE
+    --            並執行一個 UPDATE 將此目標的 IS_VALID 改成 2
+                THEN IF TEMP_DATA_LIST.TIME_TICKS >= I_SET_PERIOD * 7
+                    THEN O_DATA := 2 -- 回傳給前端，告訴 USER 這個目標確實已經完成了
+                END IF;
+                ELSE O_DATA := 1 -- 回傳給前端，告訴 USER 這個目標還在執行當中
+            END IF;
+            ELSE O_DATA:= 0; -- 回傳給前端，告訴 USER 這個目標確實已經 FAIL 了
+        END IF;
+--       輕鬆等級的判斷
+--       距離創建目標已經過的天數 如果大於 目標週期的天數
+        IF I_DIFFICULTY = '2'
+            THEN IF TEMP_DATA_LIST.TIME_TICKS <> I_SET_PERIOD * 7
+                AND
+                -- 實際紀錄的天數等於週期設定的天數
+                    I_SET_PERIOD * 7 * 0.5 <= NEW_DATE
+                THEN IF     
+                -- 第一周平均跑步距離要大於 理想距離 * 0.8 ^ (理想週期 - 第一周 +1)
+                    TEMP_DATA_LIST.AVG_DISTANCE >= I_IDEAL_DISTANCE * POWER(0.8, (I_SET_PERIOD - ROUND(TIME_TICKS/7)+1))
+                OR
+                -- 第一周平均跑步分速要快於 理想分速 * 1.2 ^ (理想週期 - 第一周 +1)
+                    TEMP_DATA_LIST.FAST_PACE_PER_KM <= I_IDEAL_PACE_PER_KM * POWER(1.2, (I_SET_PERIOD - ROUND(TIME_TICKS/7)+1))
+                    THEN IF TEMP_DATA_LIST.TIME_TICKS >= I_SET_PERIOD * 7
+                        THEN O_DATA := 2 -- 回傳給前端，告訴 USER 這個目標確實已經完成了
+                    END IF;
+                    ELSE O_DATA := 1 -- 回傳給前端，告訴 USER 這個目標確實已經 FAIL
+                END IF;
+            ELSE O_DATA:= 0;
+        END IF;  
+      END SP_QUERY_FORM_DATA_LIST;
+END PG_MT_JUDGE_GOAL;
