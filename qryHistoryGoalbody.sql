@@ -1,6 +1,14 @@
 create or replace PACKAGE BODY PG_MT_HISTORY_GOAL AS
  /** 查詢已經放棄的 procedure */
   PROCEDURE SP_QUERY_FORM_DATA_LIST(
+    I_IDEAL_DISTANCE_BEG VARCHAR2,
+    I_IDEAL_DISTANCE_END VARCHAR2,
+    I_START_DATE VARCHAR2,
+    I_END_DATE VARCHAR2,
+    I_IDEAL_PACE_PER_KM_BEG NUMBER,
+    I_IDEAL_PACE_PER_KM_END NUMBER,
+    I_SET_PERIOD VARCHAR2,
+    I_DIFFICULTY NUMBER,
     I_IS_VALID VARCHAR2,                                                                                       
     I_UUID VARCHAR2,                                                                                          
     -- 分頁排序條件 ------------------------------------------------------------------------------------------------
@@ -41,14 +49,73 @@ create or replace PACKAGE BODY PG_MT_HISTORY_GOAL AS
             (CASE A.DIFFICULTY WHEN '0' THEN '嚴格'
                                                     WHEN '1' THEN '中等'
                                                     WHEN '2' THEN '簡單'
-                                                    END) IS_VALID 
+                                                    END) DIFFICULTY 
         BULK COLLECT INTO FORM_DATA_LIST 
 		FROM                                                                               
 			TB_GOAL_MT_DIRECTORY A
 		WHERE
-            I_IS_VALID = A.IS_VALID 
-        AND 
+            (
+				I_DIFFICULTY IS NULL																						-- PK, ORACLE SYS_GUID()
+				OR A.DIFFICULTY LIKE '%' || I_DIFFICULTY || '%'                                                             					-- PK, ORACLE SYS_GUID()
+            )
+        AND
+        (
+            I_IS_VALID IS NULL
+            OR I_IS_VALID = A.IS_VALID 
+        )
+        AND
+        (
+            I_SET_PERIOD IS NULL
+            OR I_SET_PERIOD = A.SET_PERIOD 
+        )
+        AND
+        (
+            I_IDEAL_PACE_PER_KM_BEG IS NULL
+            OR I_IDEAL_PACE_PER_KM_BEG <= A.IDEAL_PACE_PER_KM 
+        )
+        AND
+        (
+            I_IDEAL_PACE_PER_KM_END IS NULL
+            OR I_IDEAL_PACE_PER_KM_END >= A.IDEAL_PACE_PER_KM 
+        )
+        AND
+        (
+            I_IDEAL_DISTANCE_BEG IS NULL
+            OR 
+            I_IDEAL_DISTANCE_BEG <= A.IDEAL_DISTANCE          
+        )
+        AND
+        (
+            I_IDEAL_DISTANCE_END IS NULL
+            OR
+            I_IDEAL_DISTANCE_END >= A.IDEAL_DISTANCE 
+                
+        )
+        AND
             A.UUID = I_UUID 
+        ORDER BY
+            (CASE WHEN I_SORT_COLUMN = 'GOAL_ID' AND I_SORT_TYPE = 'ASC' THEN A.GOAL_ID END) ASC,
+            (CASE WHEN I_SORT_COLUMN = 'GOAL_ID' AND I_SORT_TYPE = 'DESC' THEN A.GOAL_ID END) DESC,
+            (CASE WHEN I_SORT_COLUMN = 'UUID' AND I_SORT_TYPE = 'ASC' THEN A.UUID END) ASC,
+            (CASE WHEN I_SORT_COLUMN = 'UUID' AND I_SORT_TYPE = 'DESC' THEN A.UUID END) DESC,
+            (CASE WHEN I_SORT_COLUMN = 'SET_PERIOD' AND I_SORT_TYPE = 'ASC' THEN A.SET_PERIOD END) ASC, 
+            (CASE WHEN I_SORT_COLUMN = 'SET_PERIOD' AND I_SORT_TYPE = 'DESC' THEN A.SET_PERIOD END) DESC,
+            (CASE WHEN I_SORT_COLUMN = 'IDEAL_PACE_PER_KM' AND I_SORT_TYPE = 'ASC' THEN A.IDEAL_PACE_PER_KM END) ASC,
+            (CASE WHEN I_SORT_COLUMN = 'IDEAL_PACE_PER_KM' AND I_SORT_TYPE = 'DESC' THEN A.IDEAL_PACE_PER_KM END) DESC,
+            (CASE WHEN I_SORT_COLUMN = 'IDEAL_DISTANCE' AND I_SORT_TYPE = 'ASC' THEN A.IDEAL_DISTANCE END) ASC, 
+            (CASE WHEN I_SORT_COLUMN = 'IDEAL_DISTANCE' AND I_SORT_TYPE = 'DESC' THEN A.IDEAL_DISTANCE END) DESC, -- PK, ORACLE SYS_GUID()
+            (CASE WHEN I_SORT_COLUMN = 'CRE_DATE_TIME' AND I_SORT_TYPE = 'ASC' THEN A.CRE_DATE_TIME END) ASC,
+            (CASE WHEN I_SORT_COLUMN = 'CRE_DATE_TIME' AND I_SORT_TYPE = 'DESC' THEN A.CRE_DATE_TIME END) DESC,
+            (CASE WHEN I_SORT_COLUMN = 'UPD_DATE_TIME' AND I_SORT_TYPE = 'ASC' THEN A.UPD_DATE_TIME END) ASC,
+            (CASE WHEN I_SORT_COLUMN = 'UPD_DATE_TIME' AND I_SORT_TYPE = 'DESC' THEN A.UPD_DATE_TIME END) DESC,-- PK, ORACLE SYS_GUID()
+            (CASE WHEN I_SORT_COLUMN = 'CREATOR' AND I_SORT_TYPE = 'ASC' THEN A.CREATOR END) ASC,
+            (CASE WHEN I_SORT_COLUMN = 'CREATOR' AND I_SORT_TYPE = 'DESC' THEN A.CREATOR END) DESC,
+            (CASE WHEN I_SORT_COLUMN = 'UPDATER' AND I_SORT_TYPE = 'ASC' THEN A.UPDATER END) ASC, 
+            (CASE WHEN I_SORT_COLUMN = 'UPDATER' AND I_SORT_TYPE = 'DESC' THEN A.UPDATER END) DESC,-- PK, ORACLE SYS_GUID()
+            (CASE WHEN I_SORT_COLUMN = 'IS_VALID' AND I_SORT_TYPE = 'ASC' THEN A.IS_VALID END) ASC,
+            (CASE WHEN I_SORT_COLUMN = 'IS_VALID' AND I_SORT_TYPE = 'DESC' THEN A.IS_VALID END) DESC,
+            (CASE WHEN I_SORT_COLUMN = 'DIFFICULTY' AND I_SORT_TYPE = 'ASC' THEN A.DIFFICULTY END) ASC, 
+            (CASE WHEN I_SORT_COLUMN = 'DIFFICULTY' AND I_SORT_TYPE = 'DESC' THEN A.DIFFICULTY END) DESC             			-- PK, ORACLE SYS_GUID()
         ;
 
         -- 3. 取得資料總筆數 -------------------------------------------------------------------------------------------

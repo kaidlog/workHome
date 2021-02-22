@@ -18,6 +18,14 @@ create or replace PACKAGE PG_MT_HISTORY_GOAL AS
     TYPE TT_FORM_DATA_LIST IS TABLE OF TO_FORM_DATA;
     -- 查詢條件 ----------------------------------------------------------------------------------------------------
     PROCEDURE SP_QUERY_FORM_DATA_LIST(
+        I_IDEAL_DISTANCE_BEG VARCHAR2,
+        I_IDEAL_DISTANCE_END VARCHAR2,
+        I_START_DATE VARCHAR2,
+        I_END_DATE VARCHAR2,
+        I_IDEAL_PACE_PER_KM_BEG NUMBER,
+        I_IDEAL_PACE_PER_KM_END NUMBER,
+        I_SET_PERIOD VARCHAR2,
+        I_DIFFICULTY NUMBER,
         -- (0,1,2) 查詢目標的條件 ----------------------------------------------------------------------------------
         I_IS_VALID VARCHAR2,      
         -- 使用者的 id ----------------------------------------------------------------------------------------
